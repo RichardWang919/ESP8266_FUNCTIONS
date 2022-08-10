@@ -1,17 +1,14 @@
 /*
   ReadAnalogVoltage
 
-Detecect Pin -- 10K --|-- 10K -- GND
-                      |
-                      |
-                 2N2222
-                 |  |
-                 |  |
-                A0  |
-                   1M
-                    |
-                    |
-                 D6 or D7
+GND ---- 10K ----|---- 10K ---- Detecect Pin
+                 |
+                 |
+            2N2222
+A0 ---------|  |
+               |
+              1M ---------- Enable Pin
+            
                    
                   
 Meter Real   Get
