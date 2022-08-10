@@ -1,14 +1,31 @@
 /*
   ReadAnalogVoltage
 
-  Reads an analog input on pin 0, converts it to voltage, and prints the result to the Serial Monitor.
-  Graphical representation is available using Serial Plotter (Tools > Serial Plotter menu).
-  Attach the center pin of a potentiometer to pin A0, and the outside pins to +5V and ground.
 
-  This example code is in the public domain.
+Detecect Pin -- 10K --|-- 10K -- GND
+                      |
+                      |
+                 2N2222
+                 |  |
+                 |  |
+                A0  |
+                   1M
+                    |
+                    |
+                 D6 or D7
+                   
+                  
+Meter Real   Get
+Voltage      Voltage
+---------------------------------------
+0.512 V      0.508 V      -0.8%
+1.001 V      1.009 V       0.8%
+1.731 V      1.729 V      -0.1%
+3.32  V      3.307 V      -0.4%
+4.12  V      4.085 V      -0.8%
 
-  https://www.arduino.cc/en/Tutorial/BuiltInExamples/ReadAnalogVoltage
 */
+
 
 #include <Wire.h>               // Only needed for Arduino 1.6.5 and earlier
 #include "SSD1306Wire.h"        // legacy: #include "SSD1306.h"
