@@ -1,7 +1,6 @@
 /*
   ReadAnalogVoltage
 
-
 Detecect Pin -- 10K --|-- 10K -- GND
                       |
                       |
@@ -26,11 +25,13 @@ Voltage      Voltage
 
 */
 
-
 #include <Wire.h>               // Only needed for Arduino 1.6.5 and earlier
 #include "SSD1306Wire.h"        // legacy: #include "SSD1306.h"
 
-SSD1306Wire display(0x3c, D3, D5);  // ADDRESS, SDA, SCL  -  If not, they can be specified manually.
+SSD1306Wire display(0x3c, D6, D5);  // ADDRESS, SDA, SCL  -  If not, they can be specified manually.
+
+int CH_01 = D2;
+int CH_02 = D7;
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -46,9 +47,9 @@ void setup() {
   display.flipScreenVertically();
   display.setFont(ArialMT_Plain_16);
 
-  pinMode(D6, OUTPUT);
-  pinMode(D7, OUTPUT);
-  digitalWrite(D7, LOW);
+  pinMode(CH_01, OUTPUT);
+  pinMode(CH_02, OUTPUT);
+  digitalWrite(CH_01, LOW);
 }
 
 // the loop routine runs over and over again forever:
@@ -56,42 +57,27 @@ void loop() {
   int sensorValue;
   float voltage[8] = {0.0};
   
-  digitalWrite(D7, LOW);
-  digitalWrite(D6, HIGH);
+  digitalWrite(CH_01, HIGH);
+  digitalWrite(CH_02, LOW);
   delay(5);
   
   // read the input on analog pin 0:
   sensorValue = analogRead(A0);
-  // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
-  
-  //voltage[0] = sensorValue / (1024.0 / 3.19) *2;
-  voltage[0] = map(sensorValue -41, -20, 1024, 0, 1000) /1000.0 *3.3 *2 ;
-  // print out the value you read:
-  Serial.print(sensorValue);
-  Serial.print(" , ");
-  Serial.println(voltage[0]);
+  voltage[0] = map(sensorValue -33, -20, 1024, 0, 1000) /1000.0 *3.3 *2 ;
 
 
 
-
-/**/
-  digitalWrite(D6, LOW);
-  digitalWrite(D7, HIGH);
+  digitalWrite(CH_01, LOW);
+  digitalWrite(CH_02, HIGH);
   delay(5);
   
   // read the input on analog pin 0:
   sensorValue = analogRead(A0);
-  // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
-  //voltage[1] = sensorValue / (1024.0 / 3.14) *2;
-  voltage[1] = map(sensorValue -41, -20, 1024, 0, 1000) /1000.0 *3.3 *2 ;
-  // print out the value you read:
-  Serial.print(sensorValue);
-  Serial.print(" , ");
-  Serial.println(voltage[1]);
+  voltage[1] = map(sensorValue -33, -20, 1024, 0, 1000) /1000.0 *3.3 *2 ;
 
 
-  digitalWrite(D6, LOW);
-  digitalWrite(D7, LOW);
+  digitalWrite(CH_01, LOW);
+  digitalWrite(CH_02, LOW);
   delay(100);
   
   display.clear();
@@ -99,9 +85,14 @@ void loop() {
     char temp[64] = "";
     sprintf(temp, "%d:", cnt+1);
     display.drawString((cnt/4) *64, (cnt%4) *16, temp);
-    if(voltage[cnt] > 0.01){
+    if(voltage[cnt] > 0.05){
       sprintf(temp, "%.3fv", voltage[cnt]);
       display.drawString((cnt/4) *64 +14, (cnt%4) *16, temp);
+      
+      Serial.print("CH");
+      Serial.print(cnt);
+      Serial.print(" , ");
+      Serial.println(voltage[cnt]);
     }
   }
   // write the buffer to the display
