@@ -1,7 +1,7 @@
 /*
   ReadAnalogVoltageWith 74HC595
 
-GND ---- 10K ----|---- 10K ---- Detecect Pin
+GND ---- 10K ----|---- 10K ---- Detecect Pin CH 8
                  |
                  |
             2N2222
@@ -9,13 +9,13 @@ A0 ---------|  |
                |
               1M
                |
-               |Q7 CH 8 Enable Pin
-               | Q6 CH 7 Enable Pin
-               | | Q5 CH 6 Enable Pin
-               | | | Q4 CH 5 Enable Pin
-               | | | | Q3 CH 4 Enable Pin
-               | | | | | Q2 CH 3 Enable Pin
-               | | | | | | Q1 CH 2 Enable Pin
+               |Q7 CH 8 Enable Pin --- 1M --- Other 2N2222 and Detecect Pin
+               | Q6 CH 7 Enable Pin --- 1M --- Other 2N2222 and Detecect Pin
+               | | Q5 CH 6 Enable Pin --- 1M --- Other 2N2222 and Detecect Pin
+               | | | Q4 CH 5 Enable Pin --- 1M --- Other 2N2222 and Detecect Pin
+               | | | | Q3 CH 4 Enable Pin --- 1M --- Other 2N2222 and Detecect Pin
+               | | | | | Q2 CH 3 Enable Pin --- 1M --- Other 2N2222 and Detecect Pin
+               | | | | | | Q1 CH 2 Enable Pin --- 1M --- Other 2N2222 and Detecect Pin
      GND-----| | | | | | | |
              ----------------
                  74HC595    C
@@ -24,7 +24,7 @@ A0 ---------|  |
   Next 74HC595 | | | | | | VCC
                | | | | | | 
                | | | | | | 
-          MR VCC | | | | Q0 CH 1 Enable Pin
+          MR VCC | | | | Q0 CH 1 Enable Pin --- 1M --- Other 2N2222 and Detecect Pin
                  | | | |   
                  | | | |   
               SHCP | | |  
