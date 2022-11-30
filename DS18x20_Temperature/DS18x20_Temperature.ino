@@ -1,5 +1,9 @@
 #define DS18B20_Pin D2
 #define SG90_Pin D5
+#define LED_Pin D4
+
+#define Pos_Zero 90
+#define Pos_Max 180
 
 #include <OneWire.h>
 OneWire  ds(DS18B20_Pin);  // on pin 10 (a 4.7K resistor is necessary)
@@ -12,9 +16,39 @@ void setup(void) {
   Serial.begin(9600);
   pinMode(DS18B20_Pin, INPUT_PULLUP);
   pinMode(SG90_Pin, OUTPUT);
+  pinMode(LED_Pin, OUTPUT);
   
+  //Servo_SG90.attach(SG90_Pin); // 修正脈衝寬度範圍
   Servo_SG90.attach(SG90_Pin, 500, 2400); // 修正脈衝寬度範圍
-  Servo_SG90.write(0); // 一開始先置中0度
+  delay(2000);
+  
+  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+  Servo_SG90.write(Pos_Zero); // 一開始先置中0度
+  delay(500);
+  
+  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+  Servo_SG90.write(Pos_Max); // 一開始先置中90度
+  delay(500);
+  
+  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+  Servo_SG90.write(Pos_Zero); // 一開始先置中0度
+  /*
+  int pos = 500;
+  for(; pos <= 1450; pos+=10){
+    digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+    delay(10);
+    Servo_SG90.writeMicroseconds(pos);
+    digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(10);
+  }
+  for(; pos > 500; pos-=10){
+    digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+    delay(10);
+    Servo_SG90.writeMicroseconds(pos);
+    digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(10);
+  }
+  */
 }
 
 void loop(void) {
@@ -116,8 +150,12 @@ void loop(void) {
   Serial.println(" Fahrenheit");
   delay(1000);
 
-  while(celsius >= 36.0){
-    Servo_SG90.write(90); // 一開始先置中180度
+  while(celsius >= 35.5){
+    Servo_SG90.write(Pos_Max); // 一開始先置中180度
+    digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+    delay(50);
+    digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+    delay(50);
   }
   
   while(celsius >= 45.0){
