@@ -45,6 +45,8 @@ ESP8266WebServer server(80);
 // ***********************
 #include <FS.h> 
 
+using namespace std;
+
 void init_AP_mode() {
   delay(1000);
   Serial.println();
@@ -82,10 +84,40 @@ void init_AP_mode() {
   MDNS.addService("http", "tcp", 80);
 }
 void handleSpecificArg() { 
-    String message = "";//"<div class='alert alert-dark' role='alert'>目前溫度： </div>";
-    char msg[100] = {0};
-    sprintf(msg , "<div class='alert alert-dark' role='alert'>目前溫度： %.1f</div>\0", g_Celsius);
-    server.send(200, "text/plain", msg);          //Returns the HTTP response
+    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    server.sendHeader("Pragma", "no-cache");
+    server.sendHeader("Expires", "-1");
+    server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+    // here begin chunked transfer
+    server.send(200, "text/html", "");
+
+
+
+    File file = SPIFFS.open("/index.html", "r");
+    if (!file) {
+      Serial.println("Failed to open file for reading");
+      return;
+    }
+  
+    vector<String> v;
+    while (file.available()) {
+      v.push_back(file.readStringUntil('\n'));
+    }
+    file.close();
+  
+    for (String s : v) {
+      server.sendContent(s);
+    }
+
+
+
+    String message = "";
+    char msg[200] = {0};  //<head><meta http-equiv=\"Refresh\" content=\"15\">
+    sprintf(msg , "<div class=\"alert alert-dark\" role=\"alert\">目前溫度： <a href=\"#\" class=\"alert-link\">%.1f</a></div>\0", g_Celsius);
+    server.sendContent(msg);
+    
+    server.sendContent("</body></html>");
+    server.client().stop();
 
 }
 
@@ -131,9 +163,9 @@ void setup(void) {
   //ServoInitTest();
 
   //  Go into AP mode if button is pressing when system boot up.
-  if ( digitalRead(Flash_Button_Pin) == 0 ) {
+  //if ( digitalRead(Flash_Button_Pin) == 0 ) {
     init_AP_mode();
-  }
+  //}
 }
 
 void ServoInitTest() {
@@ -171,11 +203,11 @@ void loop(void) {
 
 float Get_Temp_Value() {
 
-  byte i;
-  byte present = 0;
-  byte type_s;
-  byte data[9];
-  byte addr[8];
+  int i;
+  int present = 0;
+  int type_s;
+  unsigned char data[9];
+  unsigned char addr[8];
   float celsius, fahrenheit;
 
   if ( !ds.search(addr)) {
@@ -254,7 +286,7 @@ float Get_Temp_Value() {
       raw = (raw & 0xFFF0) + 12 - data[6];
     }
   } else {
-    byte cfg = (data[4] & 0x60);
+    int cfg = (data[4] & 0x60);
     // at lower res, the low bits are undefined, so let's zero them
     if (cfg == 0x00) raw = raw & ~7;  // 9 bit resolution, 93.75 ms
     else if (cfg == 0x20) raw = raw & ~3; // 10 bit res, 187.5 ms
