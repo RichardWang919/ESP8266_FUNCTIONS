@@ -115,6 +115,7 @@ void init_AP_mode() {
   server.on("/", handleSpecificArg);
   server.on("/led_set", led_control);
   server.on("/temp_set", temp_control);
+  server.on("/door_set", door_control);
   server.on("/read_temp_limit", sensor_limit_data);
   server.on("/read_temp", sensor_data);
   server.on("/read_motor", motor_data);
@@ -157,6 +158,19 @@ void led_control()
     g_MotorStatus = 0;
   }
   server.send(200, "text/plane", state);
+}
+
+void door_control() 
+{
+  String act_state = server.arg("state");
+  if(act_state == "1"){
+    Servo_SG90.write(Pos_Max); // 一開始先置中90度
+    g_DoorStatus = 1;
+  }else{
+    Servo_SG90.write(Pos_Zero); // 一開始先置中0度
+    g_DoorStatus = 0;
+  }
+  server.send(200, "text/plane", act_state);
 }
 
 void sensor_limit_data()
@@ -288,9 +302,8 @@ void loop(void) {
     delay(50);
     digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
     delay(50);
-  }else{
-    g_DoorStatus = 0;
   }
+
   /*
   while (g_Celsius >= 45.0) {
     while (true) {
