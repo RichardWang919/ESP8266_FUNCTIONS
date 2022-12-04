@@ -1,56 +1,210 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="/favicon.ico">
 
-    <title>過溫保護系統</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/bootstrap.min.css">
 
-    <!-- Bootstrap core CSS
-    <link href="/bootstrap.min.css" rel="stylesheet"> -->
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
-
-    <!-- Custom styles for this template
-    <link href="navbar-top-fixed.css" rel="stylesheet"> -->
-
-    <!-- Bootstrap core JavaScript
-    ==================================================
-    <script src="/bootstrap.min.js"></script> -->
-	
+    <title>過溫偵測系統</title>
   </head>
+  <body class="">
+    <script src="/jquery.min.js"></script>
+    <script src="/bootstrap.min.js"></script>
+<script src="/popper.min.js"></script>
 
-  <body>
+<script>
 
-	<nav class="navbar navbar-expand-lg navbar-light bg-light">
-	  <a class="navbar-brand" href="#">過溫保護系統</a>
-	  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-		<span class="navbar-toggler-icon"></span>
-	  </button>
-	  <div class="collapse navbar-collapse" id="navbarNav">
-		<ul class="navbar-nav">
-		  <li class="nav-item active">
-			<a class="nav-link" href="#">主頁<span class="sr-only">(current)</span></a>
-		  </li>
-		  <li class="nav-item">
-			<a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">設定</a>
-		  </li>
-		  <li class="nav-item">
-			<a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">控制</a>
-		  </li>
-		</ul>
-	  </div>
-	</nav>
+	function sendTempLimit(temp_sts) 
+	{
+	  var xhttp = new XMLHttpRequest();
+	  xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				document.getElementById("state").innerHTML = this.responseText;
+			}
+	  };
+	  xhttp.open("GET", "temp_set?state="+temp_sts, true);
+	  xhttp.send();
+	}
+
+	function sendLED(led_sts) 
+	{
+	  var xhttp = new XMLHttpRequest();
+	  xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				document.getElementById("state").innerHTML = this.responseText;
+			}
+	  };
+	  xhttp.open("GET", "led_set?state="+led_sts, true);
+	  xhttp.send();
+	}
+
+	function sendDoor(door_sts) 
+	{
+	  var xhttp = new XMLHttpRequest();
+	  xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				document.getElementById("state").innerHTML = this.responseText;
+			}
+	  };
+	  xhttp.open("GET", "door_set?state="+door_sts, true);
+	  xhttp.send();
+	}
+
+	setInterval(function() 
+	{
+	  getData_Temp();
+	  getData_TempLimit();
+	  getData_ButtonStatus();
+	  getData_MotorStatus();
+	  getData_DoorStatus();
+	}, 2000);
+
+	function getData_TempLimit() {
+	  var xhttp = new XMLHttpRequest();
+	  xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				var responseValue = this.responseText;
+				console.log(responseValue);
+				console.log(responseValue == "0");
+				document.getElementById("temp_limit_val").innerHTML = this.responseText + "度";
+			}
+	  };
+	  xhttp.open("GET", "read_temp_limit", true);
+	  xhttp.send();
+	}
+
+	function getData_Temp() {
+	  var xhttp = new XMLHttpRequest();
+	  xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				var responseValue = this.responseText;
+				console.log(responseValue);
+				console.log(responseValue == "0");
+				var responseValueLimit = document.getElementById("temp_limit_val").innerHTML;
+				if(responseValue >= responseValueLimit){
+					document.getElementById("temp_class").className = "alert alert-danger";
+				}else{
+					document.getElementById("temp_class").className = "alert alert-success";
+				}
+				document.getElementById("temp_val").innerHTML = this.responseText + "度";
+			}
+	  };
+	  xhttp.open("GET", "read_temp", true);
+	  xhttp.send();
+	}
+
+	function getData_ButtonStatus() {
+	  var xhttp = new XMLHttpRequest();
+	  xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				var responseValue = this.responseText;
+				console.log(responseValue);
+				console.log(responseValue == "0");
+				if(responseValue == "0"){
+					document.getElementById("button_class").className = "alert alert-success";
+					document.getElementById("button_val").innerHTML = "按鈕按下中";
+				}else{
+					document.getElementById("button_class").className = "alert alert-dark";
+					document.getElementById("button_val").innerHTML = "按鈕放開中";
+				}
+			}
+	  };
+	  xhttp.open("GET", "read_button", true);
+	  xhttp.send();
+	}
+
+	function getData_MotorStatus() {
+	  var xhttp = new XMLHttpRequest();
+	  xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				var responseValue = this.responseText;
+				console.log(responseValue);
+				console.log(responseValue == "0");
+				if(responseValue == "0"){
+					document.getElementById("motor_class").className = "alert alert-danger";
+					document.getElementById("motor_val").innerHTML = "風扇停止中";
+				}else{
+					document.getElementById("motor_class").className = "alert alert-success";
+					document.getElementById("motor_val").innerHTML = "風扇開啟中";
+				}
+			}
+	  };
+	  xhttp.open("GET", "read_motor", true);
+	  xhttp.send();
+	}
+
+	function getData_DoorStatus() {
+	  var xhttp = new XMLHttpRequest();
+	  xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				var responseValue = this.responseText;
+				console.log(responseValue);
+				console.log(responseValue == "0");
+				if(responseValue == "0"){
+					document.getElementById("door_class").className = "alert alert-success";
+					document.getElementById("door_val").innerHTML = "機蓋關閉中";
+				}else{
+					document.getElementById("door_class").className = "alert alert-danger";
+					document.getElementById("door_val").innerHTML = "機蓋打開中";
+				}
+			}
+		};
+	  xhttp.open("GET", "read_door", true);
+	  xhttp.send();
+	}
+
+</script>
+
+<div class="container m-1">
+
+<ul class="nav ">
+  <li class="nav-item">
+    <a class="nav-link active">目前狀態</a>
+  </li>
+</ul>
 
 
-<div class="alert alert-dark" role="alert">
-  目前溫度： <a href="#" class="alert-link">25.0</a>.
+<div class="alert alert-dark" role="alert" id="temp_class">
+  目前溫度：<a href="#" class="alert-link"><span id="temp_val">0</span>
+	(過溫保護：<span id="temp_limit_val">0</span>)</a>
 </div>
 
-  </body>
-</html>
+<div class="alert alert-danger" role="alert" id="motor_class">
+  抽風電源：<a href="#" class="alert-link"><span id="motor_val">關閉中</span></a>
+</div>
+
+<div class="alert alert-dark" role="alert" id="door_class">
+  機蓋控制： <a href="#" class="alert-link"><span id="door_val">關閉中</span></a>
+</div>
+
+<div class="alert alert-dark" role="alert" id="button_class">
+  按鈕狀態： <a href="#" class="alert-link"><span id="button_val">放開中</span></a>
+</div>
+
+
+<ul class="nav ">
+  <li class="nav-item">
+    <a class="nav-link active">控制條件設定</a>
+  </li>
+</ul>
+
+<div class="card" id="control_class">
+  <div class="card-body">
+		設定溫度保護上限：<BR>
+		<button type="button" class="btn btn-light" onclick="sendTempLimit(30.0)">30 度</button>
+		<button type="button" class="btn btn-light" onclick="sendTempLimit(32.0)">32 度</button>
+		<button type="button" class="btn btn-light" onclick="sendTempLimit(34.0)">34 度</button>
+		<button type="button" class="btn btn-light" onclick="sendTempLimit(36.0)">36 度</button><BR>
+		
+		控制抽風電源：<BR>
+		<button type="button" class="btn btn-light" onclick="sendLED(1)">開啟抽風</button>
+		<button type="button" class="btn btn-light" onclick="sendLED(0)">關閉抽風</button><BR>
+		
+		控制機蓋：<BR>
+		<button type="button" class="btn btn-light" onclick="sendDoor(1)">開啟機蓋</button>
+		<button type="button" class="btn btn-light" onclick="sendDoor(0)">關閉機蓋</button><BR>
+  </div>
+</div>
