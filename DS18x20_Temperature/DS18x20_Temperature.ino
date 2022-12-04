@@ -6,7 +6,11 @@
 #define Pos_Zero 90
 #define Pos_Max 180
 
+float g_CelsiusLimit = 32.0;
 float g_Celsius = 0.0;
+int g_FlashButtonStatus = 1;
+int g_MotorStatus = 0;
+int g_DoorStatus = 0;
 
 // ***********************
 //  For DS18B20
@@ -47,6 +51,42 @@ ESP8266WebServer server(80);
 
 using namespace std;
 
+String getContentType(String filename){
+  if(server.hasArg("download")) return "application/octet-stream";
+  else if(filename.endsWith(".htm")) return "text/html";
+  else if(filename.endsWith(".html")) return "text/html";
+  else if(filename.endsWith(".css")) return "text/css";
+  else if(filename.endsWith(".js")) return "application/javascript";
+  else if(filename.endsWith(".png")) return "image/png";
+  else if(filename.endsWith(".gif")) return "image/gif";
+  else if(filename.endsWith(".jpg")) return "image/jpeg";
+  else if(filename.endsWith(".ico")) return "image/x-icon";
+  else if(filename.endsWith(".xml")) return "text/xml";
+  else if(filename.endsWith(".pdf")) return "application/x-pdf";
+  else if(filename.endsWith(".zip")) return "application/x-zip";
+  else if(filename.endsWith(".gz")) return "application/x-gzip";
+  return "text/plain";
+}
+
+bool handleFileRead(String path){
+  Serial.println("handleFileRead: " + path); // 在序列埠顯示路徑
+
+  if (path.endsWith("/")) {
+    path += "index.htm";
+  }
+
+  String contentType = getContentType(path);
+  
+  if (SPIFFS.exists(path)){
+    File file = SPIFFS.open(path, "r");
+    server.streamFile(file, contentType);
+    file.close();
+
+    return true;
+  }
+  return false;
+}
+
 void init_AP_mode() {
   delay(1000);
   Serial.println();
@@ -57,32 +97,102 @@ void init_AP_mode() {
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(myIP);
-  //server.on("/", handleRoot);
-  //server.begin();
 
-
-  server.begin(); 
-  server.on("/", handleSpecificArg);
-  server.on("/index.html", fileindex);
-  //server.on("/bootstrap.min.css", bootstrap);
-  //server.on("bootstrap.min.css", bootstrap);
-  //server.on("/popper.min.js", popper);
-  //server.on("/bootstrap.min.js", bootstrapmin);
-  //server.on("bootstrap.min.js", bootstrapmin);
-  
-  
   //NEW
   SPIFFS.begin(); 
 
   Serial.println("HTTP server started");
 
   delay(1000);
-  if (!MDNS.begin("esp8266")) {
+  if (!MDNS.begin("TempDetector")) {
     Serial.println("Error setting up MDNS responder!");
   }
   // Add service to MDNS-SD
   MDNS.addService("http", "tcp", 80);
+
+
+  server.begin(); 
+  server.on("/", handleSpecificArg);
+  server.on("/led_set", led_control);
+  server.on("/temp_set", temp_control);
+  server.on("/read_temp_limit", sensor_limit_data);
+  server.on("/read_temp", sensor_data);
+  server.on("/read_motor", motor_data);
+  server.on("/read_door", door_data);
+  server.on("/read_button", button_data);
+  
+  server.onNotFound([](){
+    if (!handleFileRead(server.uri())) {
+      server.send(404, "text/plain", "FileNotFound");
+    }
+  });
 }
+
+void temp_control() 
+{
+  String state = "OFF";
+  String act_state = server.arg("state");
+  g_CelsiusLimit = act_state.toFloat();
+  if(act_state == "1"){
+    //digitalWrite(LED_Pin, HIGH); //LED ON
+    state = "ON";
+  }else{
+    //digitalWrite(LED_Pin, LOW); //LED OFF
+    state = "OFF";
+  }
+  server.send(200, "text/plane", state);
+}
+
+void led_control() 
+{
+  String state = "OFF";
+  String act_state = server.arg("state");
+  if(act_state == "1"){
+    digitalWrite(LED_Pin, HIGH); //LED ON
+    state = "ON";
+    g_MotorStatus = 1;
+  }else{
+    digitalWrite(LED_Pin, LOW); //LED OFF
+    state = "OFF";
+    g_MotorStatus = 0;
+  }
+  server.send(200, "text/plane", state);
+}
+
+void sensor_limit_data()
+{
+  char buf[10];
+  sprintf(buf, "%.1f", g_CelsiusLimit);
+  String sensor_value = buf;
+  server.send(200, "text/plane", sensor_value);
+}
+
+void sensor_data()
+{
+  char buf[10];
+  sprintf(buf, "%.1f", g_Celsius);
+  String sensor_value = buf;
+  server.send(200, "text/plane", sensor_value);
+}
+
+void button_data()
+{
+  String sensor_value = String(g_FlashButtonStatus);
+  server.send(200, "text/plane", sensor_value);
+}
+
+void motor_data()
+{
+  String sensor_value = String(g_MotorStatus);
+  server.send(200, "text/plane", sensor_value);
+}
+
+void door_data()
+{
+  String sensor_value = String(g_DoorStatus);
+  server.send(200, "text/plane", sensor_value);
+}
+
 void handleSpecificArg() { 
     server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     server.sendHeader("Pragma", "no-cache");
@@ -113,35 +223,19 @@ void handleSpecificArg() {
 
     String message = "";
     char msg[200] = {0};  //<head><meta http-equiv=\"Refresh\" content=\"15\">
-    sprintf(msg , "<div class=\"alert alert-dark\" role=\"alert\">目前溫度： <a href=\"#\" class=\"alert-link\">%.1f</a></div>\0", g_Celsius);
-    server.sendContent(msg);
+    //sprintf(msg , "<div class=\"alert alert-dark\" role=\"alert\">目前溫度： <a href=\"#\" class=\"alert-link\">%.1f</a></div>\0", g_Celsius);
+    //sprintf(msg , "<div class=\"alert alert-dark\" role=\"alert\">按鈕狀態： <a href=\"#\" class=\"alert-link\">%s</a></div>\0", (g_FlashButtonStatus==0)?"按下中":"放開中" );
+    //server.sendContent(msg);
     
-    server.sendContent("</body></html>");
+    server.sendContent("</div></body></html>");
     server.client().stop();
 
 }
 
-void fileindex()
+void load_SPIFFS_file(String filename, String file_type)
 {
-  File file = SPIFFS.open("/index.html", "r"); 
-  size_t sent = server.streamFile(file, "text/html");
-}
-void bootstrap()
-{
-  File file = SPIFFS.open("/bootstrap.min.css", "r"); 
-  //File file = SPIFFS.open("/bootstrap.min.css.gz", "r"); 
-  size_t sent = server.streamFile(file, "text/css");
-}
-void popper()
-{
-  File file = SPIFFS.open("/popper.min.js.gz", "r"); 
-  size_t sent = server.streamFile(file, "application/javascript");
-}
-void bootstrapmin()
-{
-  File file = SPIFFS.open("/bootstrap.min.js", "r"); 
-  //File file = SPIFFS.open("/bootstrap.min.js.gz", "r"); 
-  size_t sent = server.streamFile(file, "application/javascript");
+  File file = SPIFFS.open(filename, "r");
+  size_t sent = server.streamFile(file, file_type);
 }
 
 void AP_Web_process_loop() {
@@ -183,22 +277,31 @@ void ServoInitTest() {
 }
 
 void loop(void) {
-  g_Celsius = Get_Temp_Value();
+  g_FlashButtonStatus = GetFlashButtonStatus();
+  g_Celsius = 30.5; //Get_Temp_Value();
   AP_Web_process_loop();
 
-  while (g_Celsius >= 35.5) {
+  if(g_Celsius >= g_CelsiusLimit) {
     Servo_SG90.write(Pos_Max); // 一開始先置中180度
+    g_DoorStatus = 1;
     digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
     delay(50);
     digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
     delay(50);
+  }else{
+    g_DoorStatus = 0;
   }
-
+  /*
   while (g_Celsius >= 45.0) {
     while (true) {
       delay(1000);
     }
   }
+  */
+}
+
+int GetFlashButtonStatus(){
+  return digitalRead(Flash_Button_Pin);
 }
 
 float Get_Temp_Value() {
