@@ -3,8 +3,8 @@
 #define LED_Pin D4
 #define Flash_Button_Pin D3
 
-#define Pos_Zero 90
-#define Pos_Max 180
+#define Pos_Zero 190
+#define Pos_Max 30
 
 float g_CelsiusLimit = 32.0;
 float g_Celsius = 0.0;
@@ -262,7 +262,7 @@ void setup(void) {
   pinMode(DS18B20_Pin, INPUT_PULLUP);
   pinMode(SG90_Pin, OUTPUT);
   pinMode(LED_Pin, OUTPUT);
-  pinMode(Flash_Button_Pin, INPUT);
+  pinMode(Flash_Button_Pin, INPUT_PULLUP);
 
   //Servo_SG90.attach(SG90_Pin); // 修正脈衝寬度範圍
   Servo_SG90.attach(SG90_Pin, 500, 2400); // 修正脈衝寬度範圍
@@ -296,7 +296,7 @@ void loop(void) {
   AP_Web_process_loop();
 
   if(g_Celsius >= g_CelsiusLimit) {
-    Servo_SG90.write(Pos_Max); // 一開始先置中180度
+    Servo_SG90.write(Pos_Max);
     g_DoorStatus = 1;
     digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
     delay(50);
@@ -304,6 +304,18 @@ void loop(void) {
     delay(50);
   }
 
+  if(g_FlashButtonStatus ==0){
+    Servo_SG90.write(Pos_Max);
+    g_DoorStatus = 1;
+    digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+    delay(5000);
+    
+    digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+    Servo_SG90.write(Pos_Zero);
+    delay(500);
+    g_DoorStatus = 0;
+  }
+  
   /*
   while (g_Celsius >= 45.0) {
     while (true) {
